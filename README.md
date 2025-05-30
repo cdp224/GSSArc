@@ -2,7 +2,7 @@
 
 Script to plot the arc of geostationary satellites as viewed from FSS earth stations in Europe.
 
-The calculation is based on the notes found in the src directory (GSOArc.drawio) using vector geometry.
+The calculation is based on the notes found in the src directory (GSOArc.drawio) using vector geometry. The earth is assumed to be a perfect sphere.
 
 Take aways:
 

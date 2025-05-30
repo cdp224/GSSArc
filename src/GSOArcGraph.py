@@ -10,7 +10,7 @@ def angle(v1, v2):
 
 def geo_arc(latitude_deg):
     """
-    Compute azimuth and elevation of possibly visible geostationary satellites
+    Simplified computation of azimuth and elevation of possibly visible geostationary satellites
     from a given observer latitude.
 
     Parameters:
@@ -29,45 +29,34 @@ def geo_arc(latitude_deg):
 
     centerPoint = np.array([0, 0, 0]) # Center point of earth
     #latitude_deg = 59
-    obs_latitude_rad = latitude_deg * np.pi/180
-    obs_longitude_rad = 0
-
-    sat_latitude_rad = 0
-    #sat_longitude_rad = np.radians(np.linspace(-120, 120, 31))
+    obs_latitude_rad = latitude_deg * np.pi/180   
     sat_longitude_rad = np.radians(np.linspace(-90, 90, 100))
 
     x_E = 0
     y_E = Re * np.cos(obs_latitude_rad)
     z_E = Re * np.sin(obs_latitude_rad)
     observer = np.array([x_E, y_E, z_E]) #Position of observer
+    print("Observer latitude: " +  str(latitude_deg) + "°")        
+    print("===============================")
 
-    print("Observer:")
-    print(observer)
     satellite_a = np.array([[0,0,0]])
     geoarc_a = np.array([[0,0]])
 
     #iterate over all given satellite longitudes
     for longitude_rad in sat_longitude_rad:
 
-        print("Satellite longitude: " +  str(np.degrees(longitude_rad)) + "°")
-        
+        print("Satellite longitude: " +  str(np.degrees(longitude_rad)) + "°")        
         #Set position of satellite
         x_S = Rs * np.sin(longitude_rad)
         y_S = Rs * np.cos(longitude_rad)
         z_S = 0
 
         satellite = np.array([x_S, y_S, z_S])
-        print(np.shape(satellite))
         satellite_a = np.concatenate((satellite_a, [satellite]), axis=0)
-        print(np.shape(satellite_a))
-        print("Satellite: ")
-        print(satellite)
 
         #Calculate point on observers horizontal plane where the line center to satellite penetrates 
         r=(y_E*y_E+z_E*z_E)/(y_E*y_S)
         M = np.array(np.multiply(r,[x_S,y_S,0]))
-        print("Fusspunkt: ")
-        print(M)
 
         #calculate elevation (how high is the satellite over the horizon)
         #Angle between two vectors: OS and OM
@@ -76,15 +65,12 @@ def geo_arc(latitude_deg):
         elevation_rad = angle(vec_observer_M, vec_observer_satellite)
         elevation_deg = np.degrees(elevation_rad)
         elevation_sig = np.sign(vec_observer_satellite[1]-vec_observer_M[1])
-        print(elevation_sig)
         elevation_deg = elevation_sig * elevation_deg
         print("  Satellite elevation: " + str(elevation_deg) + "°")
 
         #calculate the azimuth 
         #Angle between two vectors OMa and OM sat@0 (0 Rs 0)
         M_aequator = np.array([0,(y_E*y_E+z_E*z_E)/(y_E),0])
-        print("Fusspunkt Äguator:")
-        print(M_aequator)
         vec_observer_M_a = np.subtract(M_aequator, observer)
         azimuth_rad = angle(vec_observer_M_a, vec_observer_M)
         # azimuth + 180 to accomodate for standard direction to south
@@ -105,14 +91,9 @@ def plot_geo_arcs(latitudes):
     line_styles = ['-', '--', '-.', ':', '-', '--',]
 
     for idx, lat in enumerate(latitudes):
-        print("Latitude: " +str(lat))
-        #az, el = geo_arc(lat)
         geoarc = geo_arc(lat)
-        print(np.shape(geoarc))
         az=geoarc[:,0]
         el=geoarc[:,1]
-        print(az)
-        print(el)       
 
         # Sanity check: ensure both are 1D arrays
         if az.ndim != 1 or el.ndim != 1:
@@ -124,14 +105,6 @@ def plot_geo_arcs(latitudes):
         az_valid = np.array(az[valid_mask])
         el_valid = np.array(el[valid_mask])
         
-        print ("Koordinaten")
-        print (az_valid)
-        print (type(az_valid))
-        print (str(az_valid.size))
-        print (el_valid)
-        print (type(el_valid))
-        print (str(el_valid.size))
-
         if az_valid.size == 0 or el_valid.size == 0:
             print(f"No valid data to plot for latitude {lat}°.")
             continue
@@ -152,8 +125,10 @@ def plot_geo_arcs(latitudes):
     plt.xlim(100, 260)
     plt.ylim(0, 45)
     plt.tight_layout()
+    print("Save figure to pdf and png into ./output folder.")
     plt.savefig('../output/GEOArc.pdf')
     plt.savefig('../output/GEOArc.png')
+    print("Open figure window. Close it to terminate.")
     plt.show()
 
 
