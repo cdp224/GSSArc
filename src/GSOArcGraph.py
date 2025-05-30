@@ -116,18 +116,24 @@ def plot_geo_arcs(latitudes):
             label=f'{lat}° N',
             linewidth=1
         )
-
-    plt.xlabel('Azimuth [°]')
-    plt.ylabel('Elevation [°]')
-    plt.title('Visible Geostationary Satellite Arc by Latitude')
+    plt.rc('font', size=15)
+    hfont = {'fontname':'Arial'}
+    plt.xlabel('Azimuth [°]', **hfont, size=15)
+    plt.ylabel('Elevation [°]', **hfont, size=15)
+    plt.title('Visible Geostationary Satellite Arc by Latitude', **hfont, size=20)
     plt.grid(True, linestyle=':')
+    L = plt.legend()
+    plt.setp(L.texts, family='Arial')
     plt.legend()
     plt.xlim(100, 260)
     plt.ylim(0, 45)
     plt.tight_layout()
     print("Save figure to pdf and png into ./output folder.")
+    print("The svg-File can be easily dropped into a Word document.")
     plt.savefig('../output/GEOArc.pdf')
     plt.savefig('../output/GEOArc.png')
+    plt.savefig('../output/GEOArc.eps')
+    plt.savefig('../output/GEOArc.svg')
     print("Open figure window. Close it to terminate.")
     plt.show()
 
