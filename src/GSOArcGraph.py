@@ -1,10 +1,111 @@
 import numpy as np
 import matplotlib.pyplot as plt
-
+from Sphere import az_elev_Coordinates
 
 def angle(v1, v2):
     angle = np.arccos(np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2)))
     return angle
+
+def calc_gso_position_sph(obs_latitude_deg, sat_longitude_deg):
+
+    # GS Satellite Orbit in km
+    Rs = 42164 
+    # Earth radius in km
+    Re = 6371
+
+    obs_latitude_rad = obs_latitude_deg * np.pi / 180
+    sat_longitude_rad = sat_longitude_deg * np.pi / 180
+
+    earth_center = [0,0,0]
+
+    x_E = 0
+    y_E = Re * np.cos(obs_latitude_rad)
+    z_E = Re * np.sin(obs_latitude_rad)
+    observer = np.array([x_E, y_E, z_E]) #Position of observer
+    print("Observer latitude: " +  str(obs_latitude_deg) + "°")        
+    print("===============================")
+    
+    print("Satellite longitude: " +  str(np.degrees(sat_longitude_rad)) + "°")        
+    #Set position of satellite
+    x_S = Rs * np.sin(sat_longitude_rad)
+    y_S = Rs * np.cos(sat_longitude_rad)
+    z_S = 0
+    satellite = np.array([x_S, y_S, z_S])
+
+    print("Satellite overheadposition: " +  str(0) + "°")        
+    #Set position of satellite
+    x_S_eq = Rs * np.sin(0)
+    y_S_eq = Rs * np.cos(0)
+    z_S_eq = 0
+    satellite_eq = np.array([x_S_eq, y_S_eq, z_S_eq])
+
+    #put satellites on same sphere around observer than satellite_aq
+    #vec_observer_satellite = np.subtract(satellite, observer)
+    #vec_observer_satellite = np.multiply(1/np.linalg.norm(vec_observer_satellite), vec_observer_satellite)
+
+    #vec_observer_satellite_aq = np.subtract(satellite_aq, observer)
+    #vec_observer_satellite_aq = np.multiply(1/np.linalg.norm(vec_observer_satellite_aq), vec_observer_satellite_aq)
+
+    #calculate the zenit: straight over the observer on the sphere.
+    #vec_observer_zenit = observer
+    #vec_observer_zenit = np.multiply(1/np.linalg.norm(vec_observer_zenit), vec_observer_zenit)
+    
+    ref_long = 0
+    zenit = np.add(observer, np.subtract(observer, earth_center))
+
+    elevation_deg, azimuth_deg = az_elev_Coordinates(satellite, observer, zenit, satellite_eq, ref_long)
+    #elevation_deg = 90-np.degrees(angle(vec_observer_zenit, vec_observer_satellite))
+    azimuth_deg=180+np.sign(sat_longitude_rad)*azimuth_deg
+
+    return azimuth_deg, elevation_deg
+
+def calc_gso_position_sg(obs_latitude_deg, sat_longitude_deg):
+
+    # GS Satellite Orbit in km
+    Rs = 42164 
+    # Earth radius in km
+    Re = 6371
+
+    obs_latitude_rad = obs_latitude_deg * np.pi / 180
+    sat_longitude_rad = sat_longitude_deg * np.pi / 180
+
+    x_E = 0
+    y_E = Re * np.cos(obs_latitude_rad)
+    z_E = Re * np.sin(obs_latitude_rad)
+    observer = np.array([x_E, y_E, z_E]) #Position of observer
+    print("Observer latitude: " +  str(obs_latitude_deg) + "°")        
+    print("===============================")
+    
+    print("Satellite longitude: " +  str(np.degrees(sat_longitude_rad)) + "°")        
+    #Set position of satellite
+    x_S = Rs * np.sin(sat_longitude_rad)
+    y_S = Rs * np.cos(sat_longitude_rad)
+    z_S = 0
+    satellite = np.array([x_S, y_S, z_S])
+
+    print("Satellite overheadposition: " +  str(0) + "°")        
+    #Set position of satellite
+    x_S_eq = Rs * np.sin(0)
+    y_S_eq = Rs * np.cos(0)
+    z_S_eq = 0
+    satellite_aq = np.array([x_S_eq, y_S_eq, z_S_eq])
+
+    #put satellites on same sphere around observer than satellite_aq
+    vec_observer_satellite = np.subtract(satellite, observer)
+    vec_observer_satellite = np.multiply(1/np.linalg.norm(vec_observer_satellite), vec_observer_satellite)
+
+    vec_observer_satellite_aq = np.subtract(satellite_aq, observer)
+    vec_observer_satellite_aq = np.multiply(1/np.linalg.norm(vec_observer_satellite_aq), vec_observer_satellite_aq)
+
+    #calculate the zenit: straight over the observer on the sphere.
+    vec_observer_zenit = observer
+    vec_observer_zenit = np.multiply(1/np.linalg.norm(vec_observer_zenit), vec_observer_zenit)
+
+    elevation_deg = 90-np.degrees(angle(vec_observer_zenit, vec_observer_satellite))
+    azimuth_deg=180+np.sign(sat_longitude_rad)*np.degrees(angle(vec_observer_satellite_aq, vec_observer_satellite))
+
+    return azimuth_deg, elevation_deg
+
 
 def calc_gso_position(obs_latitude_deg, sat_longitude_deg):
 
@@ -70,9 +171,7 @@ def geo_arc(latitude_deg):
     #Observers latitutde # -90 ... 0 ... 90 degrees (south to north)
     #Observers longitude is 0 #Longitude Range: -180 ... 0 ... 180 degrees (West ... 0 ... East)
 
-    centerPoint = np.array([0, 0, 0]) # Center point of earth
-
-    sat_longitude_deg = np.linspace(-90, 90, 100)
+    sat_longitude_deg = np.linspace(-90, 90, 200)
 
     geoarc_a = np.array([[0,0]])
 
@@ -131,6 +230,7 @@ def plot_geo_arcs(latitudes):
     plt.setp(L.texts, family='Arial')
     plt.legend()
     plt.xlim(100, 260)
+    plt.xticks(np.arange(105, 256, step=15))
     plt.ylim(0, 45)
     plt.tight_layout()
     print("Save figure to pdf and png into ./output folder.")
