@@ -8,12 +8,14 @@ def angle(v1, v2):
     return angle
 
 def rotate(vector, axis, phi_deg):
+   # taken from https://en.wikipedia.org/wiki/Rotation_matrix#Rotation_matrix_from_axis_and_angle 0n 7.6.2025
+   # Chapter: Rotation matrix from axis and angle
    
-   ux=axis[0]
-   uy=axis[1]
-   uz=axis[2]
+   axis = normalize_vector(axis)
 
-   print("Axis Vector Length (must be 1):" + str(ux**2+uy**2+uz**2))
+   ux = axis[0]
+   uy = axis[1]
+   uz = axis[2]
 
    phi = np.radians(phi_deg)
 
@@ -26,27 +28,24 @@ def rotate(vector, axis, phi_deg):
    return rotated_vector
 
 def calc_az_elev_Coordinates(point_of_interest, center_point, zenit_point, reference_point, reference_longitude_deg):
-    # point_of_interest: satellite somewhere
+    # point_of_interest: e.g., a satellite somewhere
     # center_point: center_point of sphere
-    # zenit_point: zenit of sphere
+    # zenit_point: zenit of sphere (where is the overhead point)
     # reference_point: point for e.g., the azimuth reference (point that points into reference_longitude direction)
+    # returns the azimuth relative to the reference (clock wise)
+    # return the elevation above horizon (relative to the zenit)
 
     #Vectors:
     vect_center_poi = np.subtract(point_of_interest, center_point)
     vect_center_zenit = np.subtract(zenit_point, center_point)
     vect_center_reference = np.subtract(reference_point, center_point)
     
+    # Make them all of length 1
     vect_center_poi = normalize_vector(vect_center_poi)
     vect_center_zenit = normalize_vector(vect_center_zenit)
     vect_center_reference = normalize_vector(vect_center_reference)
-    print("POI")
-    print(vect_center_poi)
-    print("Zenit")
-    print(vect_center_zenit)
-    print("Reference")
-    print(vect_center_reference)
 
-    #axis that will be used to rotate POI and reference to the horizon
+    #axes that will be used to rotate POI and reference to the horizon
     vect_rotation_axis_reference = normalize_vector(np.cross(vect_center_zenit, vect_center_reference))
     vect_rotation_axis_poi = normalize_vector(np.cross(vect_center_zenit, vect_center_poi))
 
@@ -58,49 +57,36 @@ def calc_az_elev_Coordinates(point_of_interest, center_point, zenit_point, refer
     elevation_reference_rad = np.pi/2-angle(vect_center_zenit, vect_center_reference)
     elevation_reference_deg = np.degrees(elevation_reference_rad)
 
-    #Goal: bring poi to same down to zero
+    #Azimuth calculation: rotate POI and reference down to horizon and obtain angle after.
+
+    #Goal: rotate poi down to zero (i.e., the horizon)
     rotation_angle_deg = - elevation_poi_deg
-    print("POI Rotation angle: "+str(rotation_angle_deg))
-
     vect_center_poi_rot = rotate(vect_center_poi, vect_rotation_axis_poi, rotation_angle_deg)
-    print("POI elevation before rotation " +str(vect_center_poi))
-    print(elevation_poi_deg)
-    print("POI elevation after rotation (should be abt. zero) " +str(vect_center_poi_rot))
-    print(90-np.degrees(angle(vect_center_zenit, vect_center_poi_rot)))
-
-    #Goal: bring reference to same down to zero
+    
+    #Goal: rotate reference down to zero
     rotation_angle_deg = - elevation_reference_deg
-    print("Reference Rotation angle: "+str(rotation_angle_deg))
     vect_center_reference_rot  = rotate(vect_center_reference, vect_rotation_axis_reference, rotation_angle_deg)
-    print("Reference elevation before rotation")
-    print(elevation_reference_deg)
-    print("Reference elevation after rotation (should be abt. zero)")
-    print(90-np.degrees(angle(vect_center_zenit, vect_center_reference_rot)))
 
-
-    #determine sign:
-    print("tr(np.dot(normalize_vector(np.cross(vect_center_reference_rot, vect_center_poi_rot)), vect_center_zenit)) ddddd.... " + str(-1*np.dot(normalize_vector(np.cross(vect_center_reference_rot, vect_center_poi_rot)), vect_center_zenit)))
-    sign = (-1*np.dot(normalize_vector(np.cross(vect_center_reference_rot, vect_center_poi_rot)), vect_center_zenit))
+    # determine sign of the azimuth (we go clock-wise around): 
+    # Is the cross product of the two vectors pointing to the same direction than the zenit or not?
+    # np.sign function seem not to give +1 or -1... Observed nan, 0.0, ... 
+    sign = -1*np.dot(normalize_vector(np.cross(vect_center_reference_rot, vect_center_poi_rot)), vect_center_zenit)
     if str(sign)=="nan":
-        print("nan detected")
         sign = 1
     if sign > 0:
         sign = 1
     else:
         sign = -1
-    print("sign: " + str(sign))
-    print("plain azi: " + str(np.degrees(angle(vect_center_poi_rot, vect_center_reference_rot))))
+
+    #calculate the azimuth
     azimuth_deg = reference_longitude_deg + sign*np.degrees(angle(vect_center_poi_rot, vect_center_reference_rot))
+    # keep azimuth within 360 degrees
     azimuth_deg = np.mod(azimuth_deg, 360)
-
-    print("Elev poi: "+str(elevation_poi_deg))
-    print("Elev " + str(elevation_reference_deg))
-
-    print("Azi "+str(azimuth_deg))
     return azimuth_deg, elevation_poi_deg
 
 if __name__ == "__main__":
 
+    #some sanity tests...
     vect=[1,0,0]
     axis=[0,0,1]
     phi=90
