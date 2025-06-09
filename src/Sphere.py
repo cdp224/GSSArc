@@ -13,6 +13,8 @@ def rotate(vector, axis, phi_deg):
    uy=axis[1]
    uz=axis[2]
 
+   print("Axis Vector Length (must be 1):" + str(ux**2+uy**2+uz**2))
+
    phi = np.radians(phi_deg)
 
    rotation_matrix = [[np.cos(phi)+ux**2*(1-np.cos(phi)), ux*uy*(1-np.cos(phi))-uz*np.sin(phi), ux*uz*(1-np.cos(phi))+uy*np.sin(phi)],
@@ -23,7 +25,7 @@ def rotate(vector, axis, phi_deg):
 
    return rotated_vector
 
-def az_elev_Coordinates(point_of_interest, center_point, zenit_point, reference_point, reference_longitude_deg):
+def calc_az_elev_Coordinates(point_of_interest, center_point, zenit_point, reference_point, reference_longitude_deg):
     # point_of_interest: satellite somewhere
     # center_point: center_point of sphere
     # zenit_point: zenit of sphere
@@ -44,35 +46,58 @@ def az_elev_Coordinates(point_of_interest, center_point, zenit_point, reference_
     print("Reference")
     print(vect_center_reference)
 
-    vect_west = normalize_vector(np.cross(vect_center_zenit, vect_center_reference))
+    #axis that will be used to rotate POI and reference to the horizon
+    vect_rotation_axis_reference = normalize_vector(np.cross(vect_center_zenit, vect_center_reference))
+    vect_rotation_axis_poi = normalize_vector(np.cross(vect_center_zenit, vect_center_poi))
 
-
-    elevation_deg = 90-np.degrees(angle(vect_center_zenit, vect_center_poi))
-    print("ANgle "+str(np.degrees(angle(vect_center_zenit, vect_center_poi))))
-    elevation_reference_deg = 90-np.degrees(angle(vect_center_zenit, vect_center_reference))
-
-    #Goal: bring poi to same elevation in order to calculate the azimuth
-    rotation_angle_rad = elevation_reference_deg-elevation_deg
-    print("Rotation angle: "+str(rotation_angle_rad))
-
-    vect_center_poi_rot = rotate(vect_center_poi, vect_west, rotation_angle_rad)
-    print("elevation before rotation")
-    print(elevation_deg)
+    #calculate elevation of POI
+    elevation_poi_rad = np.pi/2-angle(vect_center_zenit, vect_center_poi)
+    elevation_poi_deg = np.degrees(elevation_poi_rad)
     
-    print("elevation after rotation")
+    # calcualte the elevation of the reference point.
+    elevation_reference_rad = np.pi/2-angle(vect_center_zenit, vect_center_reference)
+    elevation_reference_deg = np.degrees(elevation_reference_rad)
+
+    #Goal: bring poi to same down to zero
+    rotation_angle_deg = - elevation_poi_deg
+    print("POI Rotation angle: "+str(rotation_angle_deg))
+
+    vect_center_poi_rot = rotate(vect_center_poi, vect_rotation_axis_poi, rotation_angle_deg)
+    print("POI elevation before rotation " +str(vect_center_poi))
+    print(elevation_poi_deg)
+    print("POI elevation after rotation (should be abt. zero) " +str(vect_center_poi_rot))
     print(90-np.degrees(angle(vect_center_zenit, vect_center_poi_rot)))
 
-    print("elevation of reference")
+    #Goal: bring reference to same down to zero
+    rotation_angle_deg = - elevation_reference_deg
+    print("Reference Rotation angle: "+str(rotation_angle_deg))
+    vect_center_reference_rot  = rotate(vect_center_reference, vect_rotation_axis_reference, rotation_angle_deg)
+    print("Reference elevation before rotation")
     print(elevation_reference_deg)
+    print("Reference elevation after rotation (should be abt. zero)")
+    print(90-np.degrees(angle(vect_center_zenit, vect_center_reference_rot)))
 
 
-    azimuth_deg = reference_longitude_deg + np.degrees(angle(vect_center_poi_rot, vect_center_reference))
+    #determine sign:
+    print("tr(np.dot(normalize_vector(np.cross(vect_center_reference_rot, vect_center_poi_rot)), vect_center_zenit)) ddddd.... " + str(-1*np.dot(normalize_vector(np.cross(vect_center_reference_rot, vect_center_poi_rot)), vect_center_zenit)))
+    sign = (-1*np.dot(normalize_vector(np.cross(vect_center_reference_rot, vect_center_poi_rot)), vect_center_zenit))
+    if str(sign)=="nan":
+        print("nan detected")
+        sign = 1
+    if sign > 0:
+        sign = 1
+    else:
+        sign = -1
+    print("sign: " + str(sign))
+    print("plain azi: " + str(np.degrees(angle(vect_center_poi_rot, vect_center_reference_rot))))
+    azimuth_deg = reference_longitude_deg + sign*np.degrees(angle(vect_center_poi_rot, vect_center_reference_rot))
+    azimuth_deg = np.mod(azimuth_deg, 360)
 
-    print("Elev poi: "+str(elevation_deg))
+    print("Elev poi: "+str(elevation_poi_deg))
     print("Elev " + str(elevation_reference_deg))
 
     print("Azi "+str(azimuth_deg))
-    return elevation_deg, azimuth_deg
+    return azimuth_deg, elevation_poi_deg
 
 if __name__ == "__main__":
 
@@ -92,5 +117,77 @@ if __name__ == "__main__":
     print(phi)
     vect=rotate(vect, axis, phi)
     print(vect)
+
+    point_of_interest = [0, 1, 0]
+    center_point = [0, 0, 0]
+    zenit_point = [0, 0, 1]
+    reference_point=[-1, 0, 0]
+    reference_longitude_deg = 180
+    az, el = calc_az_elev_Coordinates(point_of_interest, center_point, zenit_point, reference_point, reference_longitude_deg)
+    print("poi: "+str(point_of_interest))
+    print("center: "+str(center_point))
+    print("zenit: "+str(zenit_point))
+    print("reference: "+str(reference_point))
+    print("referenzelongi: "+str(reference_longitude_deg))
+    print("AzPOI="+str(az))
+    print("ElPOI=",str(el))
+
+    point_of_interest = [0, -1, 0]
+    center_point = [0, 0, 0]
+    zenit_point = [0, 0, 1]
+    reference_point=[-1, 0, 0]
+    reference_longitude_deg = 180
+    az, el = calc_az_elev_Coordinates(point_of_interest, center_point, zenit_point, reference_point, reference_longitude_deg)
+    print("poi: "+str(point_of_interest))
+    print("center: "+str(center_point))
+    print("zenit: "+str(zenit_point))
+    print("reference: "+str(reference_point))
+    print("referenzelongi: "+str(reference_longitude_deg))
+    print("AzPOI="+str(az))
+    print("ElPOI=",str(el))
+
+    point_of_interest = [1, 0, 0]
+    center_point = [0, 0, 0]
+    zenit_point = [0, 0, 1]
+    reference_point=[-1, 0, 0]
+    reference_longitude_deg = 180
+    az, el = calc_az_elev_Coordinates(point_of_interest, center_point, zenit_point, reference_point, reference_longitude_deg)
+    print("poi: "+str(point_of_interest))
+    print("center: "+str(center_point))
+    print("zenit: "+str(zenit_point))
+    print("reference: "+str(reference_point))
+    print("referenzelongi: "+str(reference_longitude_deg))
+    print("AzPOI="+str(az))
+    print("ElPOI=",str(el))
+
+    point_of_interest = [1, 0, 1]
+    center_point = [0, 0, 0]
+    zenit_point = [0, 0, 1]
+    reference_point=[-1, 0, 0]
+    reference_longitude_deg = 180
+    az, el = calc_az_elev_Coordinates(point_of_interest, center_point, zenit_point, reference_point, reference_longitude_deg)
+    print("poi: "+str(point_of_interest))
+    print("center: "+str(center_point))
+    print("zenit: "+str(zenit_point))
+    print("reference: "+str(reference_point))
+    print("referenzelongi: "+str(reference_longitude_deg))
+    print("AzPOI="+str(az))
+    print("ElPOI=",str(el))
+
+
+    point_of_interest = [1, 0, -200]
+    center_point = [0, 0, 0]
+    zenit_point = [0, 0, 1]
+    reference_point=[-1, 0, 0]
+    reference_longitude_deg = 180
+    az, el = calc_az_elev_Coordinates(point_of_interest, center_point, zenit_point, reference_point, reference_longitude_deg)
+    print("poi: "+str(point_of_interest))
+    print("center: "+str(center_point))
+    print("zenit: "+str(zenit_point))
+    print("reference: "+str(reference_point))
+    print("referenzelongi: "+str(reference_longitude_deg))
+    print("AzPOI="+str(az))
+    print("ElPOI=",str(el))
+
 
     

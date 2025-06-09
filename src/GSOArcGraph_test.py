@@ -13,8 +13,12 @@ def test_both():
     print("el=" + str(el))
     print("Berne (calc_gso_position_sg)")
     az, el = calc_gso_position_sg(47, astra_long-7.41)
-    print("az=" + str(az))
-    print("el=" + str(el))
+    print("sg_az=" + str(az))
+    print("sg_el=" + str(el))
+    print("Berne (calc_gso_position_sph)")
+    az, el = calc_gso_position_sph(47, astra_long-7.41)
+    print("sph_az=" + str(az))
+    print("sph_el=" + str(el))
 
     #From Helsinki (60.1742129N,24.9408216E) Astra 19.2 longitude
     print("Helsinki (calc_gso_position)")
@@ -23,12 +27,12 @@ def test_both():
     print("el=" + str(el))
     print("Helsinki (calc_gso_position_sg)")
     az, el = calc_gso_position_sg(60.1742129, astra_long-24.9408216)
-    print("az=" + str(az))
-    print("el=" + str(el))
+    print("sp_az=" + str(az))
+    print("sp_el=" + str(el))
     print("Helsinki (calc_gso_position_sph)")
     az, el = calc_gso_position_sph(60.1742129, astra_long-24.9408216)
-    print("az=" + str(az))
-    print("el=" + str(el))
+    print("sph_az=" + str(az))
+    print("sph_el=" + str(el))
 
     #From Budapest (47.4951479N,19.0572549 E,) Astra 19.2 longitude
     print("Budapest (calc_gso_position)")
@@ -37,12 +41,12 @@ def test_both():
     print("el=" + str(el))
     print("Budapest (calc_gso_position_sg)")
     az, el = calc_gso_position_sg(47.4951479, astra_long-19.0572549)
-    print("az=" + str(az))
-    print("el=" + str(el))
+    print("sg_az=" + str(az))
+    print("sg_el=" + str(el))
     print("Budapest (calc_gso_position_sph)")
     az, el = calc_gso_position_sph(47.4951479, astra_long-19.0572549)
-    print("az=" + str(az))
-    print("el=" + str(el))
+    print("sph_az=" + str(az))
+    print("sph_el=" + str(el))
 
 
 
