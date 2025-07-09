@@ -40,8 +40,7 @@ A window opens with the graph.
 
 ### Change observers latitudes in the graph 
 
-Modify the number of latitudes to be plotted according to your needs:
-
+Modify the number of latitudes to be plotted according to your needs [in the script](https://github.com/cdp224/GSSArc/blob/ba71c7052ce5e9267e5fcad9b23ab5f4667a3d55/src/GSOArcGraph.py#L144):
 ```
 latitudes = [35, 40, 50, 60, 70, 80]
 ```
