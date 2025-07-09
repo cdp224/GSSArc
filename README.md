@@ -2,7 +2,7 @@
 
 Script to plot the arc of geostationary satellites as viewed from FSS earth stations in Europe.
 
-The calculation is based on the notes found in the src directory (GSOArc.drawio) using vector geometry. The earth is assumed to be a perfect sphere.
+The calculation is based on the notes found in the src directory using vector geometry. The earth is assumed to be a perfect sphere.
 
 Take aways:
 
@@ -33,14 +33,14 @@ cd src
 python GSOArcGraph.py
 ```
 
-Two files are generated (pdf and png) into the ./output folder.
+Output files are generated (e.g., pdf and png) into the ./output folder.
 A window opens with the graph.
 
 ## Adjustments
 
 ### Change observers latitudes in the graph 
 
-Modify the line according to your needs:
+Modify the number of latitudes to be plotted according to your needs:
 
 ```
 latitudes = [35, 40, 50, 60, 70, 80]
