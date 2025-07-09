@@ -2,3 +2,4 @@ venv/
 src/trial
 *.pyc
 *.bkp
+src/HorizonPlot.py
